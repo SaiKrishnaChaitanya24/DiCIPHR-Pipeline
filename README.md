@@ -40,23 +40,3 @@ sbatch --cpus-per-task=4 --mem=32G --wrap="apptainer run --no-home --bind /noTop
 **Note:** `/noTopup:/noTopup` needs to be replaced with the absolute path where your data is stored.
 
 Remember to replace `{subject_name}`, `{T1_image_absolute_path}`, and `{DWI_absolute_path}` with the actual values for your specific data.
-
-## Click to Copy Example
-
-To copy the text below to your clipboard, visit [this link](https://<your-username>.github.io/<repository-name>/).
-
-\```html
-<input type="text" value="Your text here" id="copyText">
-<button onclick="copyToClipboard()">Copy</button>
-
-<script>
-  function copyToClipboard() {
-    var copyText = document.getElementById("copyText");
-    copyText.select();
-    document.execCommand("copy");
-    alert("Copied the text: " + copyText.value);
-  }
-</script>
-\```
-
-Feel free to customize this guide further to suit your repository's specific requirements. Let me know if there's anything else I can help you with!
