@@ -5,8 +5,9 @@ To run the pipeline, follow the steps below. Ensure that you have the necessary 
 ## Step 1: Clone the Repository
 First, clone the repository to your local machine. You can do this using the following command:
 
-git clone <repository_url>
-cd <repository_directory>
+git clone https://github.com/SaiKrishnaChaitanya24/DiCIPHR-Pipeline.git
+
+cd DiCIPHR-Pipeline
 
 ## Step 2: Build the Singularity Container
 Build the diciphr_pipeline.sif Singularity container using the provided Singularity definition file. This ensures you have the necessary environment to run the pipeline. Use the following command:
