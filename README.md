@@ -25,4 +25,4 @@ sbatch --cpus-per-task=4 --mem=32G --wrap="apptainer run --no-home --bind /noTop
  
 Note: /noTopup:/noTopup needs to be replaced with the absolute path where your data is stored.
  
-Remember to replace {subject_name}, {T1_image_absolute_path}, and {DWI_absolute_path} with the actual values for your specific data.
+Remember to replace {subject_name}, {T1_image_absolute_path}, and {DWI_absolute_path} with the actual values for your specific data (with absolute path).
