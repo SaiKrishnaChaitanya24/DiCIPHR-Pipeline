@@ -33,7 +33,8 @@ From: ubuntu
     libxft2 \
     libxpm4 \
     libgomp1 \
-    libxrender1 
+    libxrender1 \
+    libssl-dev
     
     mkdir -p /usr/local/lib/python3.12/dist-packages/afni/
     cd /usr/local/lib/python3.12/dist-packages/afni/
