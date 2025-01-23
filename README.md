@@ -17,7 +17,9 @@ sbatch --cpus-per-task=4 --mem=32G --wrap="apptainer build ./DiCIPHR-Pipeline/di
 
 Ensure that the Singularity container was built correctly by testing it with the following commands:
 
-singularity shell ./DiCIPHR-Pipeline/diciphr_pipeline.sif
+singularity shell ./DiCIPHR-Pipeline/diciphr_pipeline.sif 
+
+
 /usr/local/bin/Scripts/test_container.sh 
 
 If the container was built successfully, the output will confirm that the test was successful.
