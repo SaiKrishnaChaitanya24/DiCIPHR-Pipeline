@@ -3,39 +3,8 @@ From: ubuntu
 
 %post
     # Install necessary system packages
-    apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    vim \
-    git \
-    bash \
-    parallel \
-    wget \
-    curl \
-    locales \
-    libgl1 \
-    python3-openpyxl \
-    python3-packaging \
-    libglx-mesa0 \
-    libglib2.0-0 \
-    git-lfs \
-    jq \
-    libgfortran5 \
-    libatlas3-base \
-    bc \
-    python-is-python3 \
-    libxt6 \
-    libeigen3-dev \
-    zlib1g-dev \
-    libgl1-mesa-dev \
-    libtiff5-dev \
-    libfftw3-dev \
-    libxft2 \
-    libxpm4 \
-    libgomp1 \
-    libxrender1 \
-    libssl-dev
-    
+    apt-get update && apt-get install -y python3 python3-pip vim git bash parallel wget curl locales libgl1 python3-openpyxl python3-packaging libglx-mesa0 libglib2.0-0 git-lfs jq libgfortran5 libatlas3-base bc python-is-python3 libxt6 libeigen3-dev zlib1g-dev libgl1-mesa-dev libtiff5-dev libfftw3-dev libxft2 libxpm4 libgomp1 libxrender1 libssl-dev
+
     mkdir -p /usr/local/lib/python3.12/dist-packages/afni/
     cd /usr/local/lib/python3.12/dist-packages/afni/
     curl -O https://afni.nimh.nih.gov/pub/dist/tgz/linux_ubuntu_16_64.tgz
