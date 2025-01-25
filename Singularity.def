@@ -321,7 +321,7 @@ From: ubuntu
     
     STATUS_BRAINMAGE=$?    
     
-    if [ -n "$INPUT_OPTIONAL_DTI_TOPUP" ] || [ -n "$INPUT_DTI_PE_DIR" ]; then
+    if [ -n "$INPUT_OPTIONAL_DTI_TOPUP" ] && [ -n "$INPUT_DTI_PE_DIR" ]; then
         /usr/local/bin/Scripts/DTI_Preprocess.sh -s $INPUT_SUBJECT -d $INPUT_DTI_PREPROCESS_1 -o $INPUT_DTI_OUTDIR/output/Output/DTI_Preprocess/${INPUT_SUBJECT} -t $INPUT_OPTIONAL_DTI_TOPUP -p $INPUT_DTI_PE_DIR -T $INPUT_DTI_READ_TIME -w $INPUT_WORKDIR
     else
         /usr/local/bin/Scripts/DTI_Preprocess.sh -s $INPUT_SUBJECT -d $INPUT_DTI_PREPROCESS_1 -o $INPUT_DTI_OUTDIR/output/Output/DTI_Preprocess/${INPUT_SUBJECT} -w $INPUT_WORKDIR
