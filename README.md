@@ -27,7 +27,7 @@ mkdir -p ./DiCIPHR-Pipeline/output
 ## Step 5: Run the Pipeline
 Run the pipeline using the Singularity container. You need to specify the subject name, the absolute path to the T1 image, the absolute path to the DWI image, and the output directory. The T1 and DWI images need to be .nii files, and the T1 image needs to be cropped. Use the command below:
  
-sbatch --cpus-per-task=4 --mem=32G --wrap="apptainer run --no-home --bind /folder_path:/folder_path --bind ./DiCIPHR-Pipeline/output:/output ./DiCIPHR-Pipeline/diciphr_pipeline.sif -s {subject_name} -i {image_path} -d {DWI_absolute_path} -o /output"
+sbatch --cpus-per-task=4 --mem=32G --wrap="apptainer run --no-home --bind /folder_path:/folder_path ./DiCIPHR-Pipeline/diciphr_pipeline.sif -s {subject_name} -i {image_path} -d {DWI_absolute_path} -o ./DiCIPHR-Pipeline/output"
  
 Note: /folder_path:/folder_path needs to be replaced with the absolute path where your data is stored.
  
