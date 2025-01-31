@@ -383,10 +383,6 @@ From: ubuntu
     mv $INPUT_DTI_OUTDIR/output/Output/Registration/Registration_DTI-T1/${INPUT_SUBJECT}/Registration_DTI-T1/${INPUT_SUBJECT}/* $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-T1/
     mv $INPUT_DTI_OUTDIR/output/Output/Registration/Registration_DTI-Eve/${INPUT_SUBJECT}/* $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-Eve/
  
-    rm -rf $INPUT_DTI_OUTDIR/output/
-    rm -rf $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Output_Temp_Dir/${INPUT_SUBJECT}
-    rm -rf $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/brainmage/${INPUT_SUBJECT}
- 
     echo "Pipeline Execution Completed"
 
 %test
