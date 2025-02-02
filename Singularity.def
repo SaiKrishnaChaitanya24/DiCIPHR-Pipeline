@@ -280,7 +280,6 @@ From: ubuntu
     mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-T1
     mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/roi_stats
     mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-Eve 
-    mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Output_Temp_Dir
     echo "Appending Diciphr Package to system path"
 
     TMPDIR=/tmp/$SLURM_JOB_ID
