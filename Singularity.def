@@ -282,8 +282,7 @@ From: ubuntu
     mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-Eve 
     mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Output_Temp_Dir
     echo "Appending Diciphr Package to system path"
-    OUTPUT_TEMP_DIR=$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Output_Temp_Dir
-    
+
     TMPDIR=/tmp/$SLURM_JOB_ID
     mkdir -p $TMPDIR
     workdir=$(mktemp -d -p $TMPDIR tmpdir.XXXXXX)
@@ -298,11 +297,6 @@ From: ubuntu
     python3 /usr/local/bin/Scripts/patch_numpy.py
   
     /usr/local/bin/Scripts/brainmage.sh -s $INPUT_SUBJECT -i $INPUT_T1_BRAINMAGE -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/brainmage
-
-    if [[ -f "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/brainmage/${INPUT_SUBJECT}_t1_brain.nii" ]] || [[ -f "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/brainmage/${INPUT_SUBJECT}_t1_brain.nii" ]]; then
-        mv $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/brainmage/${INPUT_SUBJECT}_t1_brain.nii.gz $OUTPUT_TEMP_DIR/${INPUT_SUBJECT}_t1_brain.nii.gz
-        echo "File moved to temporary directory - output path provided"
-    fi
     
     STATUS_BRAINMAGE=$?    
     
