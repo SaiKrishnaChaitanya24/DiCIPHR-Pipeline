@@ -117,7 +117,7 @@ if [ ! -e "${T1toEvePrefix}0GenericAffine.mat" ]; then
     log_run fslmaths $t1_mask -bin -mul $tmpdir/t1.nii.gz $tmpdir/t1_masked.nii.gz
     ##### REGISTRATION #####
     T1toEvePrefix=$outdir/${subject}_T1-Eve-
-    log_run /usr/local/lib/python3.12/dist-packages/ANTs/centos7/2.3.1/bin/antsRegistrationSyN.sh -d 3 -f $eve_template_t1 -m $tmpdir/t1_masked.nii.gz -o $T1toEvePrefix 
+    log_run antsRegistrationSyN.sh -d 3 -f $eve_template_t1 -m $tmpdir/t1_masked.nii.gz -o $T1toEvePrefix 
 else
     log_info "$pipeline_name already run" 
 fi 
