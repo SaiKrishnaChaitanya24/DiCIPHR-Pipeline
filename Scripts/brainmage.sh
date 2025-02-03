@@ -176,5 +176,6 @@ if [ "$runpostproc" == "TRUE" ]; then
         # Rename SRI space results 
         log_run mv -fv $mask $outdir/${subject}_SRI24_mask.nii.gz 
         log_run mv -fv $brain $outdir/${subject}_SRI24_brain.nii.gz 
+        rmdir $outdir/${subject}/
     done 
 fi
