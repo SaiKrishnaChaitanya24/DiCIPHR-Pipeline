@@ -214,6 +214,9 @@ From: ubuntu
         else 
             /usr/local/bin/Scripts/Registration_DTI-T1.sh -s $INPUT_SUBJECT -t $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/brainmage/${INPUT_SUBJECT}_t1_brain.nii* -d $INPUT_DTI_PREPROCESS_1 -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-T1 -w $INPUT_WORKDIR -T s &
         fi
+    else
+        echo "Brainmage - Failed"
+        exit 1
     fi
     wait
         
