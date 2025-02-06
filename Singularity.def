@@ -223,7 +223,7 @@ From: ubuntu
     /usr/local/bin/Scripts/Fernet.sh -s $INPUT_SUBJECT -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Fernet -d $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_DWI_preprocessed.nii.gz -m $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_tensor_mask.nii.gz
 
     /usr/local/bin/Scripts/Registration_DTI-Eve.sh -s $INPUT_SUBJECT -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration -d $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess -f $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Fernet
-                
+    STATUS_DTI_Eve=$?            
         # 8times roi_stats.py code
         # FA
     python3 /usr/local/bin/Scripts/roi_stats.py -s ${INPUT_SUBJECT} -a $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-Eve/${INPUT_SUBJECT}_Eve_Labels_to_DTI.nii* -f $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_tensor_FA.nii* -c FA -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/roi_stats -l /usr/local/Input/EveTemplate/JhuMniSSLabelLookupTable_1.csv -m mean median std
@@ -250,7 +250,7 @@ From: ubuntu
         # fwRAD
     python3 /usr/local/bin/Scripts/roi_stats.py -s ${INPUT_SUBJECT} -a $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-Eve/${INPUT_SUBJECT}_Eve_Labels_to_DTI.nii* -f $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Fernet/${INPUT_SUBJECT}_fw_tensor_RAD.nii* -c fwRAD -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/roi_stats -l /usr/local/Input/EveTemplate/JhuMniSSLabelLookupTable_1.csv -m mean median std
 
-    if [ "$STATUS_BRAINMAGE" -eq 0 ] && [ "$STATUS_DTI_PREPROCESS" -eq 0] && [ "$STATUS_DTI__Eve" -eq 0]; then
+    if [ "$STATUS_BRAINMAGE" -eq 0 ] && [ "$STATUS_DTI_PREPROCESS" -eq 0] && [ "$STATUS_DTI_Eve" -eq 0]; then
         echo "Pipeline Execution Completed"
 
 
