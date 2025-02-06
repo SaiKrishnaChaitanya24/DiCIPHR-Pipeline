@@ -166,10 +166,6 @@ if [ ! -e "$outdir/${subject}_Eve_Labels_to_DTI.nii.gz" ]; then
     log_run antsApplyTransforms -d 3 -i $eve_template_labels -r $dtispace \
         -o $atlasfn -t $transform_stack_eve_dti -n NearestNeighbor -v 1 --float 
 fi       
-# Create some useful links 
-[ ! -e "$outdir/$(basename $eve_template_t1)" ] && log_run ln -s $eve_template_t1 $outdir 
-[ ! -e "$outdir/$(basename $eve_template_labels)" ] && log_run ln -s $eve_template_labels $outdir 
-[ ! -e "$outdir/$(basename ${scalars_list[0]})" ] && log_run cp -v ${scalars_list[0]} $outdir 
 
 log_info "ROI stats for all scalars" 
 header=$tmpdir/header.csv 
@@ -180,25 +176,6 @@ do
     echo -n ",${label}_${roi}" >> $header 
 done 
 echo "" >> $header 
-roistats() { 
-    local fn=$1
-    local measure=$2
-    local output=$3
-    cat $header > $output 
-    log_info "3dROIstats -mask $atlasfn -nomeanout -nobriklab -1DRformat -nz${measure} $fn"
-    echo -n "$subject," >> $output
-    3dROIstats -mask $atlasfn -nomeanout -nobriklab -1DRformat -nz${measure} $fn | tail -n1 | xargs echo | cut -d' ' -f2- | sed s/' '/','/g >> $output 
-}
-for measure in median mean sigma; do 
-    [ -e "$fa" ] && roistats $fa $measure $outdir/${subject}_ROIstats_${measure}_FA.csv
-    [ -e "$tr" ] && roistats $tr $measure $outdir/${subject}_ROIstats_${measure}_TR.csv
-    [ -e "$ax" ] && roistats $ax $measure $outdir/${subject}_ROIstats_${measure}_AX.csv
-    [ -e "$rad" ] && roistats $rad $measure $outdir/${subject}_ROIstats_${measure}_RAD.csv
-    [ -e "$vf" ] && roistats $vf $measure $outdir/${subject}_ROIstats_${measure}_fwVF.csv
-    [ -e "$fwfa" ] && roistats $fwfa $measure $outdir/${subject}_ROIstats_${measure}_fwFA.csv
-    [ -e "$fwax" ] && roistats $fwax $measure $outdir/${subject}_ROIstats_${measure}_fwAX.csv
-    [ -e "$fwrad" ] && roistats $fwrad $measure $outdir/${subject}_ROIstats_${measure}_fwRAD.csv
-done 
 
 if [ "$cleanup" == "True" ]; then 
     log_info "Cleaning up" 
