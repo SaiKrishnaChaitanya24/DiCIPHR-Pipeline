@@ -11,7 +11,7 @@ git clone https://github.com/SaiKrishnaChaitanya24/DiCIPHR-Pipeline.git
 ## Step 2: Build the Singularity Container
 Build the diciphr_pipeline.sif Singularity container using the provided Singularity definition file. This ensures you have the necessary environment to run the pipeline. Use the following command:
  
-sbatch --cpus-per-task=4 --mem=32G --wrap="apptainer build --notest ./DiCIPHR-Pipeline/diciphr_pipeline.sif ./DiCIPHR-Pipeline/Singularity.def"
+sbatch --cpus-per-task=4 --mem=32G --wrap="singularity build --notest ./DiCIPHR-Pipeline/diciphr_pipeline.sif ./DiCIPHR-Pipeline/Singularity.def"
 
 ## Step 3: Test the Singularity Container
 
@@ -29,11 +29,11 @@ Run the pipeline using the Singularity container. You need to specify the subjec
  
 For Notopup -
 
-sbatch --cpus-per-task=4 --job-name=dti --mem=32G --wrap="apptainer run --no-home --bind /folder_path:/folder_path --bind {output_path}:/output ./DiCIPHR-Pipeline/diciphr_pipeline.sif -s {subject_name} -i {image_path} -d {DWI_absolute_path} -o /output"
+sbatch --cpus-per-task=4 --job-name=dti --mem=32G --wrap="singularity run --no-home --bind /folder_path:/folder_path --bind {output_path}:/output ./DiCIPHR-Pipeline/diciphr_pipeline.sif -s {subject_name} -i {image_path} -d {DWI_absolute_path} -o /output"
 
 For Topup -
 
-sbatch --cpus-per-task=4 --job-name=dti --mem=32G --wrap="apptainer run --no-home --bind /folder_path:/folder_path --bind {output_path}:/output ./DiCIPHR-Pipeline/diciphr_pipeline.sif -s {subject_name} -i {image_path} -d {DWI_absolute_path} -o /output -t {topup file}"
+sbatch --cpus-per-task=4 --job-name=dti --mem=32G --wrap="singularity run --no-home --bind /folder_path:/folder_path --bind {output_path}:/output ./DiCIPHR-Pipeline/diciphr_pipeline.sif -s {subject_name} -i {image_path} -d {DWI_absolute_path} -o /output -t {topup file}"
 
 Note: When you are using the pipeline for files that require topup, please specify phase encoding using -p and readout time using -T in above command.
  
