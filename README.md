@@ -40,3 +40,5 @@ Note: When you are using the pipeline for files that require topup, please speci
 Note: /folder_path:/folder_path needs to be replaced with the absolute path where your data is stored.
  
 Remember to replace {subject_name}, {image_path}, and {DWI_absolute_path} with the actual values for your specific data (with absolute path).
+
+Recommended slurm options for running the container - while using sbatch command to run, add --propagate=NONE option.
