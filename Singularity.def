@@ -250,7 +250,7 @@ From: ubuntu
         # fwRAD
     python3 /usr/local/bin/Scripts/roi_stats.py -s ${INPUT_SUBJECT} -a $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-Eve/${INPUT_SUBJECT}_Eve_Labels_to_DTI.nii* -f $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Fernet/${INPUT_SUBJECT}_fw_tensor_RAD.nii* -c fwRAD -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/roi_stats -l /usr/local/Input/EveTemplate/JhuMniSSLabelLookupTable_1.csv -m mean median std
 
-    if [ "$STATUS_BRAINMAGE" -eq 0 ] && [ "$STATUS_DTI_PREPROCESS" -eq 0]; then
+    if [ "$STATUS_DTI_PREPROCESS" -eq 0]; then
         echo "Pipeline Execution Completed"
 
 
