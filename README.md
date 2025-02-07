@@ -33,7 +33,7 @@ sbatch --cpus-per-task=4 --job-name=dti --mem=32G --wrap="singularity run --no-h
 
 For Topup -
 
-sbatch --cpus-per-task=4 --job-name=dti --mem=32G --wrap="singularity run --no-home --bind /folder_path:/folder_path --bind {output_path}:/output ./DiCIPHR-Pipeline/diciphr_pipeline.sif -s {subject_name} -i {image_path} -d {DWI_absolute_path} -o /output -t {topup file}"
+sbatch --cpus-per-task=4 --job-name=dti --mem=32G --wrap="singularity run --no-home --bind /folder_path:/folder_path --bind {output_path}:/output ./DiCIPHR-Pipeline/diciphr_pipeline.sif -s {subject_name} -i {image_path} -d {DWI_absolute_path} -o /output -t {topup file} -P {Phase Encoding} -T {Readout Time}"
 
 Note: When you are using the pipeline for files that require topup, please specify phase encoding using -p and readout time using -T in above command.
  
