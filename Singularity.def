@@ -254,7 +254,6 @@ From: ubuntu
         echo "Pipeline Execution Completed"
     fi
 
-
 %test
     #!/bin/bash
     export TMPDIR=/tmp/test
