@@ -267,6 +267,7 @@ From: ubuntu
     
     if [ "$STATUS_BRAINMAGE" -eq 0 ] && [ "$STATUS_DTI_PREPROCESS" -eq 0 ] && [ "$STATUS_DTI_Eve" -eq 0 ]; then
         echo "Pipeline Execution Completed"
+    fi
 
 %test
     #!/bin/bash
