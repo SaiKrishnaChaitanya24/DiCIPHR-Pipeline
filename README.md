@@ -43,4 +43,4 @@ Remember to replace {subject_name}, {image_path}, and {DWI_absolute_path} with t
 
 Recommended slurm options for running the container - while using sbatch command to run, add --propagate=NONE option.
 
-You can run the Pipeline in 3 modes - only DTI_Preprocess (specify -e 1 in sbatch command), for running the pipeline till Registration process (specify -e 2 in sbatch command) and default (no -e required).
+You can run the Pipeline in 3 modes - only DTI_Preprocess (specify -e 1 in sbatch command), for running the pipeline till Registration process (specify -e 2 in sbatch command) and for running the whole pipeline (no -e required).
