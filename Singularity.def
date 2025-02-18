@@ -98,9 +98,6 @@ From: ubuntu
     ./DiCIPHR-Pipeline/Scripts/patch_numpy.py /usr/local/bin/Scripts/patch_numpy.py
 
     # Copy Data Files into the container
-    /usr/lib64/libXp.so.6 /usr/local/lib64/libXp.so.6
-    /usr/lib64/libXmu.so.6 /usr/local/lib64/libXmu.so.6
-    /usr/lib64/libpng12.so.0 /usr/local/lib64/libpng12.so.0
     ./DiCIPHR-Pipeline/Input/EveTemplate /usr/local/Input/EveTemplate    
     ./DiCIPHR-Pipeline/Input/brainmage/sri24_atlas.nii.gz /usr/local/Input/sri24_atlas.nii.gz
     ./DiCIPHR-Pipeline/Input/IXI242 /usr/local/Input/IXI242
