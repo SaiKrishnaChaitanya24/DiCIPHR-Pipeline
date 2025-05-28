@@ -1,0 +1,472 @@
+Bootstrap: docker
+From: ubuntu
+
+%post
+    # Install necessary system packages
+    apt-get update && apt-get install -y findutils mesa-utils gedit pulseaudio libquadmath0 libgtk2.0-0 firefox libgomp1 python3 python3-pip vim git bash parallel wget curl locales libgl1 python3-openpyxl python3-packaging libglx-mesa0 libglib2.0-0 git-lfs jq libgfortran5 libatlas3-base bc python-is-python3 libxt6 libeigen3-dev zlib1g-dev libgl1-mesa-dev libtiff5-dev libfftw3-dev libxft2 libxpm4 libgomp1 libxrender1 libssl-dev zip unzip gfortran libopenblas-dev liblapack-dev python-dev-is-python3 ca-certificates libglu1-mesa libsm6 libice6 libpng16-16 libxcursor1 libxinerama1 libfreetype6 libxrandr2 libgtk2.0-0 libpulse0 libasound2t64 libcaca0 bzip2 dc cmake g++ clang libqt5core5a libqt5gui5 libqt5widgets5 qttools5-dev-tools libqt5opengl5-dev qtbase5-dev libc++-dev libc++abi-dev libstdc++-12-dev libqt5svg5-dev xutils-dev csh tcsh golang fuse-overlayfs squashfuse fuse2fs gocryptfs
+
+    export VERSION=1.4.1
+    cd /tmp
+    wget https://github.com/apptainer/apptainer/releases/download/v$VERSION/apptainer-$VERSION.tar.gz
+    tar -xzf apptainer-$VERSION.tar.gz
+    cd apptainer-$VERSION
+    ./mconfig
+    make -C ./builddir
+    make -C ./builddir install
+    apptainer --version
+
+    mkdir -p /usr/local/temp
+
+    mkdir -p /usr/local/synbo
+    cd /usr/local/synbo
+    git clone https://github.com/MASILab/Synb0-DISCO.git
+    cd Synb0-DISCO
+    apptainer build synb0.sif Singularity
+    chmod +x synb0.sif
+
+    mkdir -p /usr/local/lib/python3.12/dist-packages/ANTs/
+    cd /usr/local/lib/python3.12/dist-packages/ANTs/
+    wget https://github.com/ANTsX/ANTs/releases/download/v2.6.0/ants-2.6.0-ubuntu-24.04-X64-gcc.zip
+    unzip ants-2.6.0-ubuntu-24.04-X64-gcc.zip
+    
+    mkdir -p /usr/local/lib/python3.12/dist-packages/MRtrix3
+    cd /usr/local/lib/python3.12/dist-packages/MRtrix3
+    git clone https://github.com/MRtrix3/mrtrix3.git  
+    cd mrtrix3/
+    ./configure
+    ./build
+    
+    mkdir -p /apps/freesurfer
+    cd /apps/freesurfer
+    wget https://ftp.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-centos7_x86_64-7.4.1.tar.gz
+    tar -xzf freesurfer-linux-centos7_x86_64-7.4.1.tar.gz
+    chmod -R 755 /apps/freesurfer
+    chmod -R 755 /usr/local/lib/python3.12/dist-packages/MRtrix3
+
+    mkdir -p /usr/local/tmp
+    cd /usr/local/tmp
+    wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py
+    echo "/usr/local/tmp" | echo "y" | python3 fslinstaller.py
+
+    # Install Python packages using pip
+    pip install --break-system-packages pybids
+    pip install --break-system-packages bids
+    pip install --break-system-packages nibabel==3.2.1
+    pip install --break-system-packages pydicom>=1.3.0
+    pip install --break-system-packages setuptools
+    pip install --break-system-packages wheel
+    pip install --break-system-packages pyyaml && pip install --break-system-packages 'numpy<2.0.0'
+    pip install --break-system-packages backends==1.6.6
+    pip install --break-system-packages scipy>=1.2.1 
+    pip install --break-system-packages scikit-learn>=0.20.3
+    pip install --break-system-packages matplotlib>=3.0.3
+    pip install --break-system-packages statsmodels>=0.9.0
+    pip install --break-system-packages patsy>=0.5.1
+    pip install --break-system-packages pandas>=1.1.5
+    pip install --break-system-packages scikit-image
+    pip install --break-system-packages dipy==1.8.0
+    pip install --break-system-packages absl-py    
+    pip install --break-system-packages trx
+    pip install --upgrade --force-reinstall --index-url https://__token__:glpat-NzRyYs9NWyXtWDCWJLif@gitlab.com/api/v4/projects/70163485/packages/pypi/simple Diciphr --no-deps --break-system-packages
+    
+    mkdir -p /usr/local/bin/Scripts
+    mkdir -p /usr/local/Input
+    chmod +x /usr/local/bin/Scripts/*.sh
+
+    mkdir -p /usr/local/Modules/modulefiles
+    mkdir -p /usr/local/Modules/modulefiles/Brainmage
+    mkdir -p /usr/local/Input/EveTemplate
+    locale-gen en_US.UTF-8
+    update-locale LANG=en_US.UTF-8    
+    git clone https://github.com/CBICA/BrainMaGe.git /usr/local/Modules/modulefiles/Brainmage
+    cd /usr/local/Modules/modulefiles/Brainmage
+    git-lfs install
+    git lfs pull
+    python3 -c "import yaml; f = open('requirements.yml', 'r'); requirements = yaml.safe_load(f); f.close(); f = open('requirements.txt', 'w'); [f.write(dep + '\n') for dep in requirements['dependencies'] if isinstance(dep, str) and '::' not in dep and '=' not in dep and not any(pkg in dep for pkg in ['absl-py', 'grpcio', 'scikit-image'])]; [f.write(pip_dep + '\n') for dep in requirements['dependencies'] if isinstance(dep, dict) and 'pip' in dep for pip_dep in dep['pip'] if not any(pkg in pip_dep for pkg in ['absl-py', 'grpcio', 'nibabel', 'pybids', 'scikit-image'])]; f.close()"
+    python3 --version
+    while IFS= read -r package; do
+        pip install "$package" --break-system-packages || echo "Failed to install $package, continuing..."
+    done < requirements.txt
+    latesttag=$(git describe --tags)
+
+    pip uninstall --break-system-packages -y nibabel
+    pip uninstall --break-system-packages -y pydicom
+    pip install --break-system-packages 'pydicom<=1.4.1'
+    pip install --break-system-packages nibabel==3.2.1
+    pip install --break-system-packages itk
+    pip uninstall --break-system-packages -y pytorch-lightning
+    pip install --break-system-packages pytorch-lightning==0.7.6
+    pip uninstall --break-system-packages -y torchmetrics
+    pip install --break-system-packages torchmetrics==0.11.4
+    pip uninstall --break-system-packages -y tensorboard
+    pip install --break-system-packages tensorboard==2.18.0
+    
+    echo checking out ${latesttag}
+    git checkout ${latesttag}
+    python3 setup.py install --single-version-externally-managed --record record.txt    
+    chmod -R +x /usr/local/lib/python3.12/dist-packages/diciphr
+    ls -R /usr/local/lib/python3.12/dist-packages/diciphr
+    rm /usr/local/Modules/modulefiles/Brainmage/BrainMaGe.egg-info/requires.txt
+    python3 -m pip list -v    
+    pip install --upgrade --force-reinstall --index-url https://__token__:glpat-NzRyYs9NWyXtWDCWJLif@gitlab.com/api/v4/projects/69822722/packages/pypi/simple Diciphr --no-deps --break-system-packages --target /usr/local/tmp/y/lib/python3.12/site-packages/
+    pip install --break-system-packages dipy --target /usr/local/tmp/y/lib/python3.12/site-packages/
+    pip install --break-system-packages datastorage --target /usr/local/tmp/y/lib/python3.12/site-packages/
+    pip install --break-system-packages numpy --target /usr/local/tmp/y/lib/python3.12/site-packages/
+    pip install --break-system-packages dcm2niix --target /usr/local/tmp/y/lib/python3.12/site-packages/
+    mkdir -p /usr/BrainMaGe/weights/
+    cp /usr/local/lib/python3.12/dist-packages/BrainMaGe/weights/resunet_ma.pt /usr/BrainMaGe/weights/
+    chmod -R +x /usr/local/lib/python3.12/dist-packages/ANTs/ants-2.6.0/
+    chmod -R +x /usr/local/Modules/modulefiles/Brainmage/brain_mage_run
+    chmod -R +x /usr/local/Modules/modulefiles/Brainmage/brain_mage_single_run
+    chmod -R +x /apps/freesurfer/freesurfer/bin/
+    chmod -R +x /usr/local/lib/python3.12/dist-packages/diciphr/scripts/
+    chmod -R +x /usr/local/lib/python3.12/dist-packages/MRtrix3/mrtrix3/bin/
+
+%files
+    # Include your scripts
+    ./Combined-Pipeline/Scripts/Fernet.sh /usr/local/bin/Scripts/Fernet.sh
+    ./Combined-Pipeline/Scripts/Freesurfer.sh /usr/local/bin/Scripts/Freesurfer.sh
+    ./Combined-Pipeline/Scripts/brainmage.sh /usr/local/bin/Scripts/brainmage.sh
+    ./Combined-Pipeline/Scripts/DTI_Preprocess.sh /usr/local/bin/Scripts/DTI_Preprocess.sh
+    ./Combined-Pipeline/Scripts/Registration_T1-Eve.sh /usr/local/bin/Scripts/Registration_T1-Eve.sh
+    ./Combined-Pipeline/Scripts/Registration_DTI-T1.sh /usr/local/bin/Scripts/Registration_DTI-T1.sh
+    ./Combined-Pipeline/Scripts/Registration_DTI-Eve.sh /usr/local/bin/Scripts/Registration_DTI-Eve.sh
+    ./Combined-Pipeline/Scripts/roi_stats.py /usr/local/bin/Scripts/roi_stats.py
+    ./Combined-Pipeline/Scripts/pipeline_utils.sh /usr/local/bin/Scripts/pipeline_utils.sh
+    ./Combined-Pipeline/Scripts/patch_numpy.py /usr/local/bin/Scripts/patch_numpy.py
+    ./Combined-Pipeline/Scripts/Create_Schaefer.sh /usr/local/bin/Scripts/Create_Schaefer.sh
+    ./Combined-Pipeline/Scripts/StructuralConnectivity_connectomes.sh /usr/local/bin/Scripts/StructuralConnectivity_connectomes.sh
+    ./Combined-Pipeline/Scripts/StructuralConnectivity_preprocess.sh /usr/local/bin/Scripts/StructuralConnectivity_preprocess.sh
+    ./Combined-Pipeline/Scripts/pipeline_utils.sh /usr/local/bin/Scripts/pipeline_utils.sh
+    ./Combined-Pipeline/Input/ /usr/local/
+    ./Combined-Pipeline/license.txt /apps/freesurfer/freesurfer/
+
+    # Copy Data Files into the container
+    ./Combined-Pipeline/Input/EveTemplate /usr/local/Input/EveTemplate    
+    ./Combined-Pipeline/Input/brainmage/sri24_atlas.nii.gz /usr/local/Input/sri24_atlas.nii.gz
+    ./Combined-Pipeline/Input/IXI242 /usr/local/Input/IXI242
+
+%environment
+    # Set environment variables, if needed
+    export PROJECT_DIR=/usr/local
+    export DICIPHR=/usr/local/lib/python3.12/dist-packages/diciphr
+    export FSLOUTPUTTYPE=NIFTI_GZ
+    export LANG=en_US.UTF-8 
+    export LC_ALL=en_US.UTF-8
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib64/
+    export PYTHONPATH=${PYTHONPATH}:/usr/local/bin/Scripts
+    export PYTHONPATH=${PYTHONPATH}:/usr/local/lib/python3.12/dist-packages/diciphr
+    export PATH=/usr/local/lib/python3.12/dist-packages/ANTs/centos7/2.3.1/bin:$PATH
+    export ANTSPATH=/usr/local/lib/python3.12/dist-packages/ANTs/ants-2.6.0/bin/
+    export PATH=${ANTSPATH}:${PATH}
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/python3.12/dist-packages/ANTs/ants-2.6.0/lib/
+    export PYTHONPATH=${PYTHONPATH}:/usr/local/lib/python3.12/dist-packages/ANTs/ants-2.6.0/bin/
+    export PYTHONPATH=${PYTHONPATH}:/usr/local/Modules/modulefiles/Brainmage
+    export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+    export PYTHONPATH=${PYTHONPATH}:/usr/BrainMaGe/weights/resunet_ma.pt
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/python3.12/dist-packages/ANTs/centos7/2.3.1/lib/
+    export PYTHONPATH=${PYTHONPATH}:/usr/local/lib/python3.12/dist-packages/fsl/centos7/5.0.11/bin/
+    export FSLDIR=/usr/local/tmp/y
+    . ${FSLDIR}/etc/fslconf/fsl.sh
+    export PATH=${FSLDIR}/bin:$PATH
+    export FREESURFER_HOME=/apps/freesurfer/freesurfer
+    source $FREESURFER_HOME/SetUpFreeSurfer.sh
+    export PATH=$FREESURFER_HOME/bin:$PATH
+    export MRTRIX3_HOME=/usr/local/lib/python3.12/dist-packages/MRtrix3/mrtrix3
+    export PATH=$MRTRIX3_HOME/bin:$PATH
+    export PYTHONPATH=${PYTHONPATH}:/usr/local/lib/python3.12/dist-packages/diciphr/scripts/
+    export PATH=/tmp/apptainer/bin:$PATH
+    export TMPDIR=/usr/local/temp
+    export APPTAINER_CACHEDIR=/tmp/apptainer/cache
+
+%runscript
+    #!/bin/bash
+    INPUT_SUBJECT=""
+    INPUT_T1_IMAGE=""
+    INPUT_DTI_PREPROCESS_1=""
+    INPUT_OPTIONAL_DTI_TOPUP=""
+    INPUT_DTI_OUTDIR=""
+    INPUT_DTI_PE_DIR=""
+    INPUT_DTI_READ_TIME=""
+    INPUT_WORKDIR=""
+    INPUT_DTI_OPTION="2"
+    INPUT_GIBBS="N"
+    INPUT_DENOISE_OPTION="N"
+    INPUT_TRACTOGRAPHY_ALGO=""
+    INPUT_ANGLE_THRESHOLD=""
+    INPUT_STEP_SIZE=""
+    INPUT_SEEDS_PER_VOXEL=""
+    INPUT_SYNBO=""
+    INPUT_FREESURER=""
+    INPUT_DICOMS_FLAG="FALSE"
+    INPUT_DICOMS_DIR=""
+
+    while getopts "s:i:d:t:o:p:T:w:z:g:n:r:A:l:x:k:m:f:B:F:e:" opt; do
+        case ${opt} in 
+            s ) INPUT_SUBJECT="$OPTARG" ;;
+            i ) INPUT_T1_IMAGE="$OPTARG" ;;
+            d ) INPUT_DTI_PREPROCESS_1="$OPTARG" ;;
+            t ) INPUT_OPTIONAL_DTI_TOPUP="$OPTARG" ;;
+            o ) INPUT_DTI_OUTDIR="$OPTARG" ;;
+            p ) INPUT_DTI_PE_DIR="$OPTARG" ;;
+            T ) INPUT_DTI_READ_TIME="$OPTARG" ;;
+            w ) INPUT_WORKDIR=$PWD ;;
+            z ) INPUT_DTI_OPTION="$OPTARG" ;;
+            g ) INPUT_GIBBS="$OPTARG" ;;
+            n ) INPUT_DENOISE_OPTION="$OPTARG" ;;
+            r ) INPUT_TRACTOGRAPHY_ALGO="$OPTARG" ;;
+            A ) INPUT_ANGLE_THRESHOLD="$OPTARG" ;;
+            l ) INPUT_STEP_SIZE="$OPTARG" ;;
+            x ) INPUT_SEEDS_PER_VOXEL="$OPTARG" ;;
+            k ) INPUT_RETAIN_BRAIN_TCK="$OPTARG" ;;
+            m ) INPUT_RETAIN_BRAIN_TRK="$OPTARG" ;;
+            f ) INPUT_ENABLE_PFT="$OPTARG" ;;
+            B ) INPUT_PIPELINE_MODE="$OPTARG" ;;
+            F ) INPUT_FREESURER="$OPTARG" ;;
+            e ) INPUT_SYNBO="$OPTARG" ;;
+            \? ) echo "Usage: cmd [-n INPUT_DENOISE_OPTION]  [-s INPUT_SUBJECT] [-i INPUT_T1_BRAINMAGE] [-d INPUT_DTI_PREPROCESS_1] [-t INPUT_OPTIONAL_DTI_TOPUP] [-o INPUT_DTI_OUTDIR] [-p INPUT_DTI_PE_DIR] [-w INPUT_WORKDIR] [-a INPUT_ATLAS] [-T INPUT_DTI_READ_TIME] [-m INPUT_MASK]" 
+            exit 1 ;; 
+        esac 
+    done
+
+    # Check if mandatory arguments are provided 
+    if [ -z "$INPUT_SUBJECT" ] || [ -z "$INPUT_DTI_PREPROCESS_1" ] || [ -z "$INPUT_DTI_OUTDIR" ] || [ -z "$INPUT_PIPELINE_MODE" ] || [ -z "$INPUT_SYNBO" ]; then 
+        echo "Error: Missing required arguments" 
+        echo "Usage: singularity run combined_pipeline.sif -s <INPUT_SUBJECT> -d <INPUT_DTI_PREPROCESS_1> -o <INPUT_DTI_OUTDDIR> -B <INPUT_PIPELINE_MODE> -e <INPUT_SYNBO>" 
+        exit 1
+    fi
+    
+    TMPDIR=/tmp/$SLURM_JOB_ID
+    mkdir -p $TMPDIR
+    workdir=$(mktemp -d -p $TMPDIR tmpdir.XXXXXX)
+    mkdir -p /tmp/brainmage
+
+    echo "Running reorient_nifti.py file"
+    mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP
+    
+    dwi_file_name=$(basename "$INPUT_DTI_PREPROCESS_1")
+    echo "$dwi_file_name"
+
+    t1_file_name=$(basename "$INPUT_T1_IMAGE")
+    echo "$t1_file_name"
+
+    python3 /usr/local/lib/python3.12/dist-packages/diciphr/scripts/reorient_nifti.py -i $INPUT_DTI_PREPROCESS_1 -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/$dwi_file_name -r LPS
+     
+    python3 /usr/local/bin/Scripts/patch_numpy.py    
+    run_function_1() {
+        mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess
+        mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Synb0
+        python3 /usr/local/lib/python3.12/dist-packages/diciphr/scripts/reorient_nifti.py -i $INPUT_T1_IMAGE -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/$t1_file_name -r LPS
+        echo -e "0 1 0 0.062\n0 1 0 0.000" > $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/acqparams.txt
+        cp $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/$t1_file_name $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/T1.nii.gz
+        if [ "$INPUT_SYNBO" -eq 0 ]; then
+            if [ "$INPUT_DTI_OPTION" -eq 0 ]; then
+                INPUT_DENOISE_OPTION="s"
+                /usr/local/bin/Scripts/DTI_Preprocess.sh -s "$INPUT_SUBJECT" -d "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/$dwi_file_name" -o "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess" -w "$INPUT_WORKDIR" -n "$INPUT_DENOISE_OPTION" -z 0
+            elif [ "$INPUT_DTI_OPTION" -eq 1 ]; then
+                /usr/local/bin/Scripts/DTI_Preprocess.sh -s "$INPUT_SUBJECT" -d "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/$dwi_file_name" -o "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess" -w "$INPUT_WORKDIR" -z 1
+            else
+                INPUT_GIBBS="s"
+                /usr/local/bin/Scripts/DTI_Preprocess.sh -s "$INPUT_SUBJECT" -d "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/$dwi_file_name" -o "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess" -w "$INPUT_WORKDIR" -g "$INPUT_GIBBS" -z 2
+            fi
+        elif [ $INPUT_SYNBO -eq 1 ]; then
+            if [ -n "$INPUT_OPTIONAL_DTI_TOPUP" ] || [ -n "$INPUT_DTI_PE_DIR" ]; then
+                if [ "$INPUT_DTI_OPTION" -eq 0 ]; then
+                    INPUT_DENOISE_OPTION="s"
+                    /usr/local/bin/Scripts/DTI_Preprocess.sh -s "$INPUT_SUBJECT" -d "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/$dwi_file_name" -o "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess" -t "$INPUT_OPTIONAL_DTI_TOPUP" -T "$INPUT_DTI_READ_TIME" -w "$INPUT_WORKDIR" -p "$INPUT_DTI_PE_DIR" -n "$INPUT_DENOISE_OPTION" -z 0
+                elif [ "$INPUT_DTI_OPTION" -eq 1 ]; then
+                    /usr/local/bin/Scripts/DTI_Preprocess.sh -s "$INPUT_SUBJECT" -d "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/$dwi_file_name" -o "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess" -t "$INPUT_OPTIONAL_DTI_TOPUP" -T "$INPUT_DTI_READ_TIME" -w "$INPUT_WORKDIR" -p "$INPUT_DTI_PE_DIR" -z 1
+                else
+                    INPUT_GIBBS="s"
+                    /usr/local/bin/Scripts/DTI_Preprocess.sh -s "$INPUT_SUBJECT" -d "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/$dwi_file_name" -o "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess" -t "$INPUT_OPTIONAL_DTI_TOPUP" -T "$INPUT_DTI_READ_TIME" -w "$INPUT_WORKDIR" -p "$INPUT_DTI_PE_DIR" -g "$INPUT_GIBBS" -z 2
+                fi
+            else
+                echo "Please Provide Reverse PE Scan and PE Direction to run the pipeline."
+            fi 
+        else
+            mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Synb0
+            python3 /usr/local/lib/python3.12/dist-packages/diciphr/scripts/extract_b0.py -d "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/$dwi_file_name" -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/b0.nii.gz
+            cp $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/$t1_file_name $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/T1.nii.gz
+            apptainer run -e -B "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/":/INPUTS -B $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Synb0/:/OUTPUTS -B /apps/freesurfer/freesurfer/license.txt:/extra/freesurfer/license.txt /usr/local/synbo/Synb0-DISCO/synb0.sif --notopup 
+            if [ "$INPUT_DTI_OPTION" -eq 0 ]; then
+                INPUT_DENOISE_OPTION="s"
+                /usr/local/bin/Scripts/DTI_Preprocess.sh -s "$INPUT_SUBJECT" -d "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/$dwi_file_name" -o "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess" -w "$INPUT_WORKDIR" -n "$INPUT_DENOISE_OPTION" -y $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Synb0/b0_u.nii.gz -z 0
+            elif [ "$INPUT_DTI_OPTION" -eq 1 ]; then
+                /usr/local/bin/Scripts/DTI_Preprocess.sh -s "$INPUT_SUBJECT" -d "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/$dwi_file_name" -o "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess" -w "$INPUT_WORKDIR" -y $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Synb0/b0_u.nii.gz -z 1
+            else
+                INPUT_GIBBS="s"
+                /usr/local/bin/Scripts/DTI_Preprocess.sh -s "$INPUT_SUBJECT" -d "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/$dwi_file_name" -o "$INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess" -w "$INPUT_WORKDIR" -g "$INPUT_GIBBS" -y $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Synb0/b0_u.nii.gz -z 2
+            fi
+        fi
+
+        mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Fernet
+        dir_path=$(dirname "$INPUT_DTI_PREPROCESS_1")
+        echo $dir_path
+
+        base_name_dwi=$(basename "$INPUT_DTI_PREPROCESS_1" | xargs -I {} basename {} .nii | xargs -I {} basename {} .nii.gz)
+        bval_file="${dir_path}/${base_name_dwi}.bval"
+        echo $bval_file
+        values=$(cat "${bval_file}")
+        all_within_range=true
+
+        for value in $values; do
+            if (( $(echo "$value > 1500" | bc -l) )); then
+                echo "Value $value is greater than 1500."
+                all_within_range=false
+            fi
+        done
+
+        if [ "$all_within_range" = true ]; then
+            /usr/local/bin/Scripts/Fernet.sh -s $INPUT_SUBJECT -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Fernet -d $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_DWI_preprocessed.nii.gz -m $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_tensor_mask.nii.gz
+        else
+            echo "Not running Fernet.sh as b is greater than 1500."
+        fi
+    }
+
+    if [ $INPUT_PIPELINE_MODE -eq 1 ]; then
+        echo "Running Synbo-Disco, DTI Preprocess and Fernet."
+        run_function_1
+        exit 0
+    fi
+
+    mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/brainmage
+    mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-T1
+
+    run_dti_t1() {
+        echo "Running Brainmage"
+        /usr/local/bin/Scripts/brainmage.sh -s $INPUT_SUBJECT -i $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/$t1_file_name -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/brainmage
+        STATUS_BRAINMAGE=$?
+        if [ "$STATUS_BRAINMAGE" -eq 0 ]; then
+            if [ "$INPUT_SYNBO" -eq 0 ]; then
+                /usr/local/bin/Scripts/Registration_DTI-T1.sh -s $INPUT_SUBJECT -t $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/brainmage/${INPUT_SUBJECT}_t1_brain.nii* -d $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_DWI_preprocessed.nii.gz -m $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_tensor_mask.nii.gz  -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-T1 -w $INPUT_WORKDIR -T s
+            else
+                /usr/local/bin/Scripts/Registration_DTI-T1.sh -s $INPUT_SUBJECT -t $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/brainmage/${INPUT_SUBJECT}_t1_brain.nii* -d $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_DWI_preprocessed.nii.gz -m $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_tensor_mask.nii.gz  -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-T1 -w $INPUT_WORKDIR -T r 
+            fi
+        else
+            echo "Brainmage - Failed, Unable to run Registration DTI to T1"
+            exit 1
+        fi
+    }
+
+    if [ $INPUT_PIPELINE_MODE -eq 2 ]; then
+        echo "Running Synbo-Disco, DTI Preprocess, Fernet, Brainmage and DTI to T1 Registration."
+        run_function_1
+        run_dti_t1
+        exit 0
+    fi
+    
+    mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/roi_stats
+    mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-Eve
+    mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_T1-Eve
+
+    run_dti_roi() {
+        /usr/local/bin/Scripts/Registration_T1-Eve.sh -s $INPUT_SUBJECT -t $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/brainmage/${INPUT_SUBJECT}_t1_brain.nii* -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_T1-Eve -w $INPUT_WORKDIR 
+        /usr/local/bin/Scripts/Registration_DTI-Eve.sh -s $INPUT_SUBJECT -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration -d $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess -f $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Fernet
+        if [ "$all_within_range" = true ]; then
+            python3 /usr/local/bin/Scripts/roi_stats.py -s ${INPUT_SUBJECT} -a $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-Eve/${INPUT_SUBJECT}_Eve_Labels_to_DTI.nii* -f $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_tensor_FA.nii* -c FA -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/roi_stats -l /usr/local/Input/EveTemplate/JhuMniSSLabelLookupTable_1.csv -m mean median std
+        
+            python3 /usr/local/bin/Scripts/roi_stats.py -s ${INPUT_SUBJECT} -a $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-Eve/${INPUT_SUBJECT}_Eve_Labels_to_DTI.nii* -f $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_tensor_TR.nii* -c TR -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/roi_stats -l /usr/local/Input/EveTemplate/JhuMniSSLabelLookupTable_1.csv -m mean median std
+
+            # AX
+            python3 /usr/local/bin/Scripts/roi_stats.py -s ${INPUT_SUBJECT} -a $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-Eve/${INPUT_SUBJECT}_Eve_Labels_to_DTI.nii* -f $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_tensor_AX.nii* -c AX -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/roi_stats -l /usr/local/Input/EveTemplate/JhuMniSSLabelLookupTable_1.csv -m mean median std
+        
+            # RAD
+            python3 /usr/local/bin/Scripts/roi_stats.py -s ${INPUT_SUBJECT} -a $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-Eve/${INPUT_SUBJECT}_Eve_Labels_to_DTI.nii* -f $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_tensor_RAD.nii* -c RAD -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/roi_stats -l /usr/local/Input/EveTemplate/JhuMniSSLabelLookupTable_1.csv -m mean median std
+        
+            python3 /usr/local/bin/Scripts/roi_stats.py -s ${INPUT_SUBJECT} -a $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-Eve/${INPUT_SUBJECT}_Eve_Labels_to_DTI.nii* -f $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Fernet/${INPUT_SUBJECT}_fw_tensor_FA.nii* -c fwFA -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/roi_stats -l /usr/local/Input/EveTemplate/JhuMniSSLabelLookupTable_1.csv -m mean median std
+
+            # fwVF
+            python3 /usr/local/bin/Scripts/roi_stats.py -s ${INPUT_SUBJECT} -a $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-Eve/${INPUT_SUBJECT}_Eve_Labels_to_DTI.nii* -f $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Fernet/${INPUT_SUBJECT}_fw_volume_fraction.nii* -c fwVF -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/roi_stats -l /usr/local/Input/EveTemplate/JhuMniSSLabelLookupTable_1.csv -m mean median std
+
+	    #f
+            python3 /usr/local/bin/Scripts/roi_stats.py -s ${INPUT_SUBJECT} -a $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-Eve/${INPUT_SUBJECT}_Eve_Labels_to_DTI.nii* -f $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Fernet/${INPUT_SUBJECT}_fw_tensor_AX.nii* -c fwAX -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/roi_stats -l /usr/local/Input/EveTemplate/JhuMniSSLabelLookupTable_1.csv -m mean median std
+
+            # fwRAD
+            python3 /usr/local/bin/Scripts/roi_stats.py -s ${INPUT_SUBJECT} -a $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-Eve/${INPUT_SUBJECT}_Eve_Labels_to_DTI.nii* -f $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Fernet/${INPUT_SUBJECT}_fw_tensor_RAD.nii* -c fwRAD -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/roi_stats -l /usr/local/Input/EveTemplate/JhuMniSSLabelLookupTable_1.csv -m mean median std
+
+        else
+            echo "Roi Stats cannot be generated as bval is greater than 2000."
+        fi
+        
+    }    
+    
+    if [ $INPUT_PIPELINE_MODE -eq 3 ]; then
+        echo "Running Synbo-Disco, DTI Preprocess, Fernet, Brainmage, DTI to T1 Registration, T1 to Eve Registration, ROI STATS."
+        run_function_1
+        run_dti_t1
+        run_dti_roi
+        exit 0
+    fi
+
+
+    run_scp() {    
+        mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Schaefer
+        mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/StructuralConnectivity
+        mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/StructuralConnectivity/Preprocess
+        mkdir -p $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Freesurfer
+
+        if [ "$INPUT_FREESURER" = "True" ]; then
+            /usr/local/bin/Scripts/Freesurfer.sh -s $INPUT_SUBJECT -t $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/TEMP/$t1_file_name -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Freesurfer
+        else
+            echo "Copying $INPUT_FREESURER to $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Freesurfer"
+            cp -r $INPUT_FREESURER $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Freesurfer
+        fi
+        if [ -z "$INPUT_OPTIONAL_DTI_TOPUP" ]; then
+            /usr/local/bin/Scripts/Create_Schaefer.sh -s $INPUT_SUBJECT -a $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-T1/${INPUT_SUBJECT}_DTI-T1-0GenericAffine.mat -d $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_DWI_preprocessed.nii.gz -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Schaefer -f $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Freesurfer -t $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/brainmage/${INPUT_SUBJECT}_t1_brain.nii.gz
+        else
+            /usr/local/bin/Scripts/Create_Schaefer.sh -s $INPUT_SUBJECT -a $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-T1/${INPUT_SUBJECT}_DTI-T1-0GenericAffine.mat -i $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-T1/${INPUT_SUBJECT}_dico-0InverseWarp.nii.gz -d $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_DWI_preprocessed.nii.gz -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Schaefer -f $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Freesurfer -t $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/brainmage/${INPUT_SUBJECT}_t1_brain.nii.gz
+        fi
+        if [ -z "$INPUT_OPTIONAL_DTI_TOPUP" ]; then
+            /usr/local/bin/Scripts/StructuralConnectivity_preprocess.sh -s $INPUT_SUBJECT -a $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-T1/${INPUT_SUBJECT}_DTI-T1-0GenericAffine.mat -d $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_DWI_preprocessed.nii.gz -m $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_tensor_mask.nii.gz -f $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Freesurfer/${INPUT_SUBJECT}/${INPUT_SUBJECT}_freesurfer_labels.nii.gz -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/StructuralConnectivity
+        else
+            /usr/local/bin/Scripts/StructuralConnectivity_preprocess.sh -s $INPUT_SUBJECT -a  $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Registration/Registration_DTI-T1/${INPUT_SUBJECT}_DTI-T1-0GenericAffine.mat -d $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_DWI_preprocessed.nii.gz -m $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/DTI_Preprocess/${INPUT_SUBJECT}_tensor_mask.nii.gz -f $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/Freesurfer/${INPUT_SUBJECT}/${INPUT_SUBJECT}_freesurfer_labels.nii.gz -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/StructuralConnectivity -i $INPUT_DICO
+        fi
+        if [[ -n "$INPUT_TRACTOGRAPHY_ALGO" && -n "$INPUT_ANGLE_THRESHOLD" && -n "$INPUT_STEP_SIZE" && -n "$INPUT_SEEDS_PER_VOXEL" && -n "$INPUT_ENABLE_PFT" && -n "$INPUT_RETAIN_BRAIN_TCK" && -n "$INPUT_RETAIN_BRAIN_TRK" ]]; then
+            /usr/local/bin/Scripts/StructuralConnectivity_connectomes.sh -s $INPUT_SUBJECT -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/StructuralConnectivity -g $INPUT_TRACTOGRAPHY_ALGO -A $INPUT_ANGLE_THRESHOLD -l $INPUT_STEP_SIZE -n $INPUT_SEEDS_PER_VOXEL -P $INPUT_ENABLE_PFT -K $INPUT_RETAIN_BRAIN_TCK -T $INPUT_RETAIN_BRAIN_TRK 
+        elif [[ -n "$INPUT_TRACTOGRAPHY_ALGO" ]]; then
+            /usr/local/bin/Scripts/StructuralConnectivity_connectomes.sh -s $INPUT_SUBJECT -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/StructuralConnectivity -g $INPUT_TRACTOGRAPHY_ALGO 
+        elif [[ -n "$INPUT_ANGLE_THRESHOLD" ]]; then 
+            /usr/local/bin/Scripts/StructuralConnectivity_connectomes.sh -s $INPUT_SUBJECT -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/StructuralConnectivity -A $INPUT_ANGLE_THRESHOLD 
+        elif [[ -n "$INPUT_ENABLE_PFT" ]]; then
+            /usr/local/bin/Scripts/StructuralConnectivity_connectomes.sh -s $INPUT_SUBJECT -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/StructuralConnectivity -P $INPUT_ENABLE_PFT 
+        elif [[ -n "$INPUT_RETAIN_BRAIN_TRK" && -n "$INPUT_RETAIN_BRAIN_TCK" ]]; then 
+            /usr/local/bin/Scripts/StructuralConnectivity_connectomes.sh -s $INPUT_SUBJECT -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/StructuralConnectivity -K $INPUT_RETAIN_BRAIN_TCK -T $INPUT_RETAIN_BRAIN_TRK 
+        else
+            /usr/local/bin/Scripts/StructuralConnectivity_connectomes.sh -s $INPUT_SUBJECT -o $INPUT_DTI_OUTDIR/${INPUT_SUBJECT}/StructuralConnectivity
+        fi
+    }    
+    
+    if [ $INPUT_PIPELINE_MODE -eq 4 ]; then
+        echo "Running Synbo-Disco, DTI Preprocess, Fernet, Brainmage, DTI to T1 Registration, T1 to Eve Registration, freesurfer, Structural Connectivity Pipeline."
+        run_function_1
+        run_dti_t1
+        run_dti_roi
+        run_scp
+        echo "Pipeline Execution Completed."
+        exit 0
+    fi
+    
+
+%test
+    #!/bin/bash
+    export TMPDIR=/tmp/test
+    mkdir -p $TMPDIR
+
+    # Run the first command
+    /usr/local/bin/Scripts/brainmage.sh -s IXI242 -i /usr/local/Input/IXI242/IXI242-HH-1722-T1.nii.gz -o $TMPDIR
+    status1=$?
+ 
+    # Run the second command
+    /usr/local/lib/python3.12/dist-packages/diciphr/scripts/dti_estimate.py -d /usr/local/Input/IXI242/IXI242-HH-1722-DTI.nii.gz -o $TMPDIR
+    status2=$?
+
+    file_count=$(find /tmp -type f | wc -l)
+    
+    # Check if both commands were successful
+    if [ $status1 -eq 0 ] && [ $status2 -eq 0 ] && [ $file_count -eq 14 ]; then
+        echo "Container Test Successful, Please Run the Container"
+        echo "Maintainer: Drew Parker <william.parker@pennmedicine.upenn.edu> and Sai Krishna Chaitanya Annavazala <SaiKrishna.Annavazala@pennmedicine.upenn.edu>"
+        echo "Version: 1.0.0"
+    else
+        echo "Container Test Failed, Please rebuild."
+    fi
