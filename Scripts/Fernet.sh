@@ -76,12 +76,13 @@ log_run /usr/local/lib/python3.12/dist-packages/diciphr/scripts/n4_bias_correcti
 
 log_run /usr/local/lib/python3.12/dist-packages/diciphr/scripts/extract_gaussian_shells.py -i $tmpdir/dwi_N4.nii.gz -o $tmpdir/dwi_N4_gaussian.nii.gz 
 
-fernet_base=$outdir/${subject}
-log_info "Fernet" 
-log_run /usr/local/lib/python3.12/dist-packages/diciphr/scripts/fernet.py -d $tmpdir/dwi_N4_gaussian.nii.gz \
-          -o $fernet_base \
-          -m $mask \
-          -n 50
+if [ $? -eq 2 ]; then
+    log_info "Skipping Fernet: No Gaussian shells detected."
+else
+    fernet_base=$outdir/${subject}
+    log_info "Fernet" 
+    log_run /usr/local/lib/python3.12/dist-packages/diciphr/scripts/fernet.py -d $tmpdir/dwi_N4_gaussian.nii.gz -o $fernet_base -m $mask -n 50
+fi
 
 if [ "$cleanup" == "True" ]; then 
     log_info "Cleaning up" 
